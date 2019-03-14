@@ -1,0 +1,402 @@
+---
+title: 'Spatial CODA'
+author: "Supplemental material"
+date: "Thi Huong An Nguyen, Anne Ruiz-Gazen, Christine Thomas-Agnan, Thibault Laurent"
+output:
+  pdf_document:
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+---
+<link href="markdown7.css" rel="stylesheet">
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We provide the data and the **R** code used in the article "Spatial CODA" so that readers may reproduce all the figures, tables and statistics presented in the article with the **R** software. 
+
+If you use this code, please cite: 
+
+Nguyen T.H.A, Ruiz-Gazen, A., Thomas-Agnan C. and T. Laurent (2019). Spatial CODA. *WP*.
+
+# Prerequisites #
+
+Required packages:
+```{r, eval = F}
+install.packages(c("compositions", "mvnfast", "quantmod", "plot3D", "sp"))
+```
+
+Loading packages:
+```{r, message = F}
+require("classInt") # discretize numeric variable
+require("compositions") # compositional data
+require("ggplot2") # ggplot functions
+require("mvnfast") # multivariate Student distribution 
+require("quantmod")  # import financial data
+require("plot3D") # plot distribution in 3D
+require("RColorBrewer") # palette colors with R
+require("rgdal") # import spatial data
+require("sp") # spatial data
+require("spdep") # spatial econometric modelling
+```
+
+Information about the current R session :
+```{r}
+sessionInfo()
+```
+
+
+# Simulation study #
+
+This section demonstrates how to obtain the results presented in the section 3 of the article. We first present our  functions which can be adapted to another framework different from our simulation process.
+
+## Simulation of spatial multivariate $Y$  ## 
+
+The function *simu_spatial_multi_y()* simulates a multivariate $Y$ of the form $Y= Y\Gamma + WYR + X\beta + \epsilon$ where $\epsilon$ follows either a multivariate Gaussian (**method_simulate = "N"**), or the Independent multivariate Student (**method_simulate = "IT"**) distributions.  
+
+Input arguments are :
+
+* **X**, the matrix of explanatory variables of size $n \times K$,
+
+* **beta_true**, the $\beta$ matrix of size $K\times L$ : 
+
+$$\left(\begin{array}{ccc} 
+\beta_{11} & \ldots & \beta_{1L} \\ 
+\beta_{21} & \ldots & \beta_{2L} \\ 
+\vdots & & \vdots \\ 
+\beta_{K1} & \ldots & \beta_{KL}
+\end{array}\right)$$
+
+* **method_simulate**, the method of simulation (a character among "N", "IT"),
+
+* **Sigma**, the matrix of size $L \times L$,
+
+* **GAMMA**, the matrix of size $L \times L$,
+
+* **RHO**, the matrix of size $L \times L$,
+
+* **W**, the matrix of size $n \times n$,
+
+* **nu**, for Student distribution only.
+
+The function returns a matrix of size $n \times L$. To load the function:
+  
+  ```{r}
+source("./R/simu_spatial_multi_y.R")
+```
+
+
+## Examples ##
+
+### Preparation of the data ### 
+
+Import the [Midi-Pyrénées communes boundaries](http://www.thibault.laurent.free.fr/code/GLT/contours.zip) into **R** which was used in Goulard et al. (2017): 
+  
+  ```{r,echo=FALSE,results="hide"}
+URL <- "http://www.thibault.laurent.free.fr/code/GLT/"
+fil <- "contours.zip"
+if (!file.exists(fil)) download.file(paste(URL, fil, sep = ""), fil)
+unzip(fil)
+```
+
+```{r,echo=TRUE,results="hide"}
+mapMAP <- readOGR(dsn = "contours", layer = "ADTCAN_region")
+```
+
+We convert the type of the identification units into numeric values:
+  ```{r}
+mapMAP@data$CODE <- as.numeric(as.character(mapMAP@data$CODE))
+```
+
+The number of observations equals to $n$:
+  ```{r}
+n <- nrow(mapMAP)
+```
+
+We consider one spatial weight matrix $W$, based on the 10-nearest neighbours and row-normalized. $W$ is relatively sparse ($96.5\%$ of null values).
+```{r,echo=TRUE}
+coords <- coordinates(mapMAP)
+W1.listw <- nb2listw(knn2nb(knearneigh(coords, 10)), 
+                     style = "W")
+W_simu <- listw2mat(W1.listw)
+```
+
+### Simulation of a multivariate SAR process ###
+
+#### Example when $L = 2$ ####
+We plan to simulate a multivariate $Y$ of size $L=2$ : 
+  
+```{r}
+L_simu <- 2
+```
+
+We simulate the explanatory variables:
+  
+```{r}
+set.seed(1234)
+x1 <- rnorm(n, 15, 3)
+x2 <- rbinom(n, 100, 0.45)/100
+x3 <- log(round(runif(n, 1, n),0))
+x_simu <- cbind(rep(1, n), x1, x2, x3)
+p_simu <- ncol(x_simu)
+```
+
+
+The $\beta$ matrix is $$\left(\begin{array}{cc} 5 & 2\\ 1/4 & -1 \\ 6 & -3\\ 1 & 3\end{array}\right),$$ 
+  
+```{r}
+beta_true <- matrix(c(5, 2, 0.25, -1, 6, -3, 1, 3), byrow = T,
+                    nrow = p_simu, ncol = L_simu)
+```
+
+the $\Sigma$ matrix is  $$\left(\begin{array}{cc} 10 & 8\\ 8 & 10\end{array}\right),$$ 
+  
+```{r}
+Sigma <- matrix(c(10, 9, 9, 10),
+                nrow = L_simu, ncol = L_simu)
+```
+
+the $\Gamma$ matrix is $$\left(\begin{array}{cc} 0 & 0\\ 0 & 0\end{array}\right),$$ 
+  
+```{r}
+GAMMA <- matrix(c(0, 0, 0, 0),
+                nrow = L_simu, ncol = L_simu)
+```
+
+and the $R$ matrix is $$\left(\begin{array}{cc} 0.75 & 0.1\\ 0.3 & 0.15\end{array}\right).$$ 
+  
+```{r}
+RHO <- matrix(c(0.5, 0.1, 0.2, 0.4),
+              nrow = L_simu, ncol = L_simu)
+```
+
+
+We simulate the process:
+  
+```{r}
+set.seed(1)
+y_N <- simu_spatial_multi_y(X = x_simu, beta_true = beta_true, method_simulate = "N",
+                            Sigma = Sigma, GAMMA = GAMMA, RHO = RHO, W = W_simu) 
+mapMAP@data[, c("y_1", "y_2")] <- y_N
+```
+
+We plot the two component of $Y$ on the map: 
+```{r, fig.width = 12, fig.height = 6}
+library("cartography")
+op <- par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(0, 0, 1, 0))
+choroLayer(spdf = mapMAP, var = "y_1", legend.pos = "topleft", 
+           method = "quantile")
+choroLayer(spdf = mapMAP, var = "y_2", legend.pos = "topleft", 
+           method = "quantile")
+par(op)
+```
+
+We also plot the joint distribution:
+```{r}
+y_N_df <- data.frame(y_1 = y_N[, 1], y_2 = y_N[, 2])
+sp <- ggplot(y_N_df, aes(x = y_1, y = y_2)) +
+  geom_point()
+sp + geom_density_2d()
+```
+
+#### Example when $L = 3$ ####
+
+We simulate another multivariate sample when $L = 3$.
+
+```{r}
+L_3 <- 3
+```
+
+We keep the same explanatatory variable $X$. However, the $\beta$ matrix is now equal to : $$\left(\begin{array}{ccc} 5 & 2 & 10\\ 1/4 & -1 & 4\\ 6 & -3 & -5 \\ 1 & 3 & 5\end{array}\right)$$ 
+  
+and the $\Sigma$ matrix is $$\left(\begin{array}{ccc} 12 & 10 & 10\\ 10 & 15 & 10 \\ 10 & 10 & 20\end{array}\right)$$ 
+  
+  
+```{r}
+beta_true_3 <- matrix(c(5, 2, 10, 0, -1, 0, 6, -3, -5, 1, 0, 5), byrow = T,
+                      nrow = p_simu, ncol = L_3)
+Sigma_3 <- matrix(10, nrow = L_3, ncol = L_3)
+diag(Sigma_3) <- c(12, 15, 20)
+```
+
+The $\Gamma$ matrix is $$\left(\begin{array}{ccc} 0 & 0 & 0 \\ 0 & 0 & 0 \\ 0 & 0 & 0\end{array}\right)$$ 
+  
+```{r}
+GAMMA_3 <- matrix(c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+                  nrow = L_3, ncol = L_3)
+```
+
+The $\rho$ matrix is $$\left(\begin{array}{ccc} 0.75 & 0.1 & 0.1 \\ 0.1 & 0.25 & 0.1 \\ 0.1 &0.1 & 0.8\end{array}\right)$$ 
+  
+```{r}
+RHO_3 <- matrix(c(0.5, 0.1, 0.1, 0.1, 0.35, 0.1, 0.1, 0.1, 0.4),
+                nrow = L_3, ncol = L_3)
+```
+
+
+**Simulation of a "N" distribution**
+  
+```{r}
+y_N_3d <- simu_spatial_multi_y(X = x_simu, beta_true = beta_true_3, 
+                               method_simulate = "N", Sigma = Sigma_3, 
+                               GAMMA = GAMMA_3, RHO = RHO_3, W = W_simu) 
+mapMAP@data[, c("y_1_3d", "y_2_3d", "y_3_3d")] <- y_N_3d
+```
+
+We plot the three component of $Y$ on the map: 
+  
+```{r, fig.width = 12, fig.height = 6}
+op <- par(mfrow = c(1, 3), oma = c(0, 0, 0, 0), mar = c(0, 0, 1, 0))
+choroLayer(spdf = mapMAP, var = "y_1_3d", legend.pos = "topleft", 
+           method = "quantile")
+choroLayer(spdf = mapMAP, var = "y_2_3d", legend.pos = "topleft", 
+           method = "quantile")
+choroLayer(spdf = mapMAP, var = "y_3_3d", legend.pos = "topleft", 
+           method = "quantile")
+par(op)
+```
+
+
+# Estimation #
+
+## Estimation of the parameters by a 2SLS method
+
+The function *estimate_spatial_multi_N()* estimates the coefficients associated to the multivariate Gaussian SAR model. The algorithm is based on Kelejian and Prucha (1998).
+
+Input arguments are :
+  
+* **Y**, a matrix of size $n \times L$
+  
+* **X**, a matrix of explanatory variables of size $n \times K$,
+
+* **W**, a spatial weight matrix of size $n \times n$,
+
+* **GAMMA_esti**, a boolean which indicates if we estimate or nor the parameter associated to $\Gamma$.
+
+The function returns a list with : 
+  
+* the estimate of the $\beta$ parameters
+
+* the estimate of the $\Gamma$ matrix 
+
+* the estimate of the $R$ matrix 
+
+* the estimate of the $\Sigma$ matrix
+
+To load the function:
+  ```{r}
+source("./R/estimate_spatial_multi_N.R")
+source("./R/estimate_spatial_multi_gen_N.R")
+```
+
+
+### Examples: ###
+
+**Simulated data when $L = 2$** 
+  
+  ```{r}
+(res_multi_N <- estimate_spatial_multi_N(Y = y_N, X = x_simu, W = W_simu))
+```
+
+```{r}
+(res_multi_N <- estimate_spatial_multi_N(Y = y_N, X = x_simu, W = W_simu, 
+                                         GAMMA_esti = T))
+```
+
+**Simulated data when $L = 2$** 
+  
+```{r}
+(res_multi_N_3D <- estimate_spatial_multi_N(Y = y_N_3d, X = x_simu, 
+                                            W = W_simu))
+```
+
+```{r}
+(res_multi_N_3D <- estimate_spatial_multi_N(Y = y_N_3d, X = x_simu, W = W_simu, 
+                                            GAMMA_esti = T))
+```
+
+
+```{r}
+(res_multi_N_gen_3D <- estimate_spatial_multi_gen_N(Y = y_N_3d, X = x_simu, 
+  W = W_simu, ind_beta = matrix(c(T, F, T, T, T, T, T, F, T, F, T, T), 4, 3),
+  ind_RHO = matrix(c(T, T, T, T, T, F, F, T, T), 3, 3),
+  ind_GAMMA = matrix(c(F, T, T, T, F, F, F, T, F), 3, 3)))
+```
+
+## Application to the real data
+
+We first load the data:
+```{r}
+source("R/preparation_base_ilr.R")
+```
+
+Then, we plot the data.
+```{r}
+Ye <- as(y_ilr, "matrix")
+plot(Ye[,1], Ye[,2], xlab = expression(paste("ilr","_"[1],'(Z)')), 
+     ylab = expression(paste("ilr","_"[2],'(Z)')), 
+     xaxs = "i", yaxs = "i")
+```
+
+We prepare the explanatory variables:
+  
+```{r}
+Xe <- as(cbind(1, x2_df[, c("age3_ilr1", "age3_ilr2", 
+                            "unemp_rate", "income_rate")]),
+         "matrix")
+```
+
+### Multivariate Gaussian model
+
+We estimate first a multivariate gaussian model by using the *lm()* function.
+
+```{r}
+res_N <- lm(Ye ~ Xe - 1) 
+```
+
+Then, we look the spatial distribution of the residuals. For this, we first compute a spatial weight matrix based on the 4-nearest neighbours. 
+
+```{r}
+coords_fr <- coordinates(dep.2015.spdf)
+W_listw <- nb2listw(knn2nb(knearneigh(coords_fr, 4)), 
+                    style = "W")
+W_dep <- listw2mat(W_listw)
+```
+
+We test the spatial autocorrelation in the residuals component by component:
+```{r}
+moran.mc(residuals(res_N)[, 1], listw = W_listw, nsim = 1000)
+moran.mc(residuals(res_N)[, 2], listw = W_listw, nsim = 1000)
+```
+
+We plot the residuals:
+```{r}
+dep.2015.spdf@data[, c("res_y_1", "res_y_2")] <- residuals(res_N)
+```
+
+
+```{r, fig.width = 12, fig.height = 6}
+library("cartography")
+op <- par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(0, 0, 1, 0))
+choroLayer(spdf = dep.2015.spdf, var = "res_y_1", legend.pos = "topleft", 
+           method = "quantile", legend.values.rnd = 2)
+choroLayer(spdf = dep.2015.spdf, var = "res_y_2", legend.pos = "topleft", 
+           method = "quantile", legend.values.rnd = 2)
+par(op)
+```
+
+We estimate a multivariate gaussian SAR model by using the *lm()* function.
+
+```{r}
+(res_sar_N <- estimate_spatial_multi_N(Ye, Xe, W_dep, GAMMA_esti = F))
+```
+
+
+# References 
+
+*  Goulard M., Laurent T. and Thomas-Agnan C. (2017). About predictions in spatial autoregressive models: optimal and almost optimal strategies, Spatial Economic Analysis, 12:2-3, 304-325, DOI: 10.1080/17421772.2017.1300679 
+
+* Nguyen T.H.A, Ruiz-Gazen, A., Thomas-Agnan C. and T. Laurent (2019). Multivariate Student versus Multivariate Gaussian Regression Models with Application to Finance. Journal of Risk and Financial Management, 12(1), 28.
+
