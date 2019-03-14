@@ -3,7 +3,7 @@ title: 'Spatial CODA'
 author: "Supplemental material"
 date: "Thi Huong An Nguyen, Anne Ruiz-Gazen, Christine Thomas-Agnan, Thibault Laurent"
 output:
-  pdf_document:
+  html_document:
     highlight: tango
     number_sections: yes
     toc: yes
@@ -83,7 +83,7 @@ $$\left(\begin{array}{ccc}
 
 The function returns a matrix of size $n \times L$. To load the function:
   
-  ```{r}
+```{r}
 source("./R/simu_spatial_multi_y.R")
 ```
 
@@ -94,7 +94,7 @@ source("./R/simu_spatial_multi_y.R")
 
 Import the [Midi-Pyrénées communes boundaries](http://www.thibault.laurent.free.fr/code/GLT/contours.zip) into **R** which was used in Goulard et al. (2017): 
   
-  ```{r,echo=FALSE,results="hide"}
+```{r,echo=FALSE,results="hide"}
 URL <- "http://www.thibault.laurent.free.fr/code/GLT/"
 fil <- "contours.zip"
 if (!file.exists(fil)) download.file(paste(URL, fil, sep = ""), fil)
@@ -106,12 +106,12 @@ mapMAP <- readOGR(dsn = "contours", layer = "ADTCAN_region")
 ```
 
 We convert the type of the identification units into numeric values:
-  ```{r}
+```{r}
 mapMAP@data$CODE <- as.numeric(as.character(mapMAP@data$CODE))
 ```
 
 The number of observations equals to $n$:
-  ```{r}
+```{r}
 n <- nrow(mapMAP)
 ```
 
@@ -286,7 +286,7 @@ The function returns a list with :
 * the estimate of the $\Sigma$ matrix
 
 To load the function:
-  ```{r}
+```{r}
 source("./R/estimate_spatial_multi_N.R")
 source("./R/estimate_spatial_multi_gen_N.R")
 ```
@@ -295,8 +295,7 @@ source("./R/estimate_spatial_multi_gen_N.R")
 ### Examples: ###
 
 **Simulated data when $L = 2$** 
-  
-  ```{r}
+```{r}
 (res_multi_N <- estimate_spatial_multi_N(Y = y_N, X = x_simu, W = W_simu))
 ```
 

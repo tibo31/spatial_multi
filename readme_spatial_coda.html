@@ -330,12 +330,15 @@ $(document).ready(function () {
 <p>Input arguments are :</p>
 <ul>
 <li><p><strong>X</strong>, the matrix of explanatory variables of size <span class="math inline">\(n \times K\)</span>,</p></li>
-<li><p><strong>beta_true</strong>, the <span class="math inline">\(\beta\)</span> matrix of size <span class="math inline">\(K\times L\)</span> : <span class="math display">\[\left(\begin{array}{cc} 
-\beta_{11} &amp; \ldots &amp; \beta_{1L}\\ 
+<li><p><strong>beta_true</strong>, the <span class="math inline">\(\beta\)</span> matrix of size <span class="math inline">\(K\times L\)</span> :</p></li>
+</ul>
+<p><span class="math display">\[\left(\begin{array}{ccc} 
+\beta_{11} &amp; \ldots &amp; \beta_{1L} \\ 
 \beta_{21} &amp; \ldots &amp; \beta_{2L} \\ 
 \vdots &amp; &amp; \vdots \\ 
 \beta_{K1} &amp; \ldots &amp; \beta_{KL}
-\end{array}\right)\]</span></p></li>
+\end{array}\right)\]</span></p>
+<ul>
 <li><p><strong>method_simulate</strong>, the method of simulation (a character among “N”, “IT”),</p></li>
 <li><p><strong>Sigma</strong>, the matrix of size <span class="math inline">\(L \times L\)</span>,</p></li>
 <li><p><strong>GAMMA</strong>, the matrix of size <span class="math inline">\(L \times L\)</span>,</p></li>
@@ -359,7 +362,7 @@ $(document).ready(function () {
 <p>We consider one spatial weight matrix <span class="math inline">\(W\)</span>, based on the 10-nearest neighbours and row-normalized. <span class="math inline">\(W\)</span> is relatively sparse (<span class="math inline">\(96.5\%\)</span> of null values).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">coords &lt;-<span class="st"> </span><span class="kw">coordinates</span>(mapMAP)
 W1.listw &lt;-<span class="st"> </span><span class="kw">nb2listw</span>(<span class="kw">knn2nb</span>(<span class="kw">knearneigh</span>(coords, <span class="dv">10</span>)), 
- <span class="dt">style =</span> <span class="st">&quot;W&quot;</span>)
+                     <span class="dt">style =</span> <span class="st">&quot;W&quot;</span>)
 W_simu &lt;-<span class="st"> </span><span class="kw">listw2mat</span>(W1.listw)</code></pre></div>
 </div>
 <div id="simulation-of-a-multivariate-sar-process" class="section level3">
@@ -386,11 +389,11 @@ p_simu &lt;-<span class="st"> </span><span class="kw">ncol</span>(x_simu)</code>
                 <span class="dt">nrow =</span> L_simu, <span class="dt">ncol =</span> L_simu)</code></pre></div>
 <p>and the <span class="math inline">\(R\)</span> matrix is <span class="math display">\[\left(\begin{array}{cc} 0.75 &amp; 0.1\\ 0.3 &amp; 0.15\end{array}\right).\]</span></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">RHO &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="fl">0.5</span>, <span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">0.4</span>),
-                <span class="dt">nrow =</span> L_simu, <span class="dt">ncol =</span> L_simu)</code></pre></div>
+              <span class="dt">nrow =</span> L_simu, <span class="dt">ncol =</span> L_simu)</code></pre></div>
 <p>We simulate the process:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1</span>)
 y_N &lt;-<span class="st"> </span><span class="kw">simu_spatial_multi_y</span>(<span class="dt">X =</span> x_simu, <span class="dt">beta_true =</span> beta_true, <span class="dt">method_simulate =</span> <span class="st">&quot;N&quot;</span>,
-                         <span class="dt">Sigma =</span> Sigma, <span class="dt">GAMMA =</span> GAMMA, <span class="dt">RHO =</span> RHO, <span class="dt">W =</span> W_simu) 
+                            <span class="dt">Sigma =</span> Sigma, <span class="dt">GAMMA =</span> GAMMA, <span class="dt">RHO =</span> RHO, <span class="dt">W =</span> W_simu) 
 mapMAP<span class="op">@</span>data[, <span class="kw">c</span>(<span class="st">&quot;y_1&quot;</span>, <span class="st">&quot;y_2&quot;</span>)] &lt;-<span class="st"> </span>y_N</code></pre></div>
 <p>We plot the two component of <span class="math inline">\(Y\)</span> on the map:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;cartography&quot;</span>)
@@ -412,16 +415,16 @@ sp <span class="op">+</span><span class="st"> </span><span class="kw">geom_densi
 <h4><span class="header-section-number">2.2.2.2</span> Example when <span class="math inline">\(L = 3\)</span></h4>
 <p>We simulate another multivariate sample when <span class="math inline">\(L = 3\)</span>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">L_<span class="dv">3</span> &lt;-<span class="st"> </span><span class="dv">3</span></code></pre></div>
-<p>We keep the same explanatatory variable <span class="math inline">\(X\)</span>. However, the <span class="math inline">\(\beta\)</span> matrix is now equal to : <span class="math display">\[\left(\begin{array}{cc} 5 &amp; 2 &amp; 10\\ 1/4 &amp; -1 &amp; 4\\ 6 &amp; -3 &amp; -5 \\ 1 &amp; 3 &amp; 5\end{array}\right)\]</span></p>
+<p>We keep the same explanatatory variable <span class="math inline">\(X\)</span>. However, the <span class="math inline">\(\beta\)</span> matrix is now equal to : <span class="math display">\[\left(\begin{array}{ccc} 5 &amp; 2 &amp; 10\\ 1/4 &amp; -1 &amp; 4\\ 6 &amp; -3 &amp; -5 \\ 1 &amp; 3 &amp; 5\end{array}\right)\]</span></p>
 <p>and the <span class="math inline">\(\Sigma\)</span> matrix is <span class="math display">\[\left(\begin{array}{ccc} 12 &amp; 10 &amp; 10\\ 10 &amp; 15 &amp; 10 \\ 10 &amp; 10 &amp; 20\end{array}\right)\]</span></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">beta_true_<span class="dv">3</span> &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">5</span>, <span class="dv">2</span>, <span class="dv">10</span>, <span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">6</span>, <span class="op">-</span><span class="dv">3</span>, <span class="op">-</span><span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">5</span>), <span class="dt">byrow =</span> T,
-                    <span class="dt">nrow =</span> p_simu, <span class="dt">ncol =</span> L_<span class="dv">3</span>)
+                      <span class="dt">nrow =</span> p_simu, <span class="dt">ncol =</span> L_<span class="dv">3</span>)
 Sigma_<span class="dv">3</span> &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">10</span>, <span class="dt">nrow =</span> L_<span class="dv">3</span>, <span class="dt">ncol =</span> L_<span class="dv">3</span>)
 <span class="kw">diag</span>(Sigma_<span class="dv">3</span>) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">12</span>, <span class="dv">15</span>, <span class="dv">20</span>)</code></pre></div>
-<p>The <span class="math inline">\(\Gamma\)</span> matrix is <span class="math display">\[\left(\begin{array}{cc} 0 &amp; 0 &amp; 0 \\ 0 &amp; 0 &amp; 0 \\ 0 &amp; 0 &amp; 0\end{array}\right)\]</span></p>
+<p>The <span class="math inline">\(\Gamma\)</span> matrix is <span class="math display">\[\left(\begin{array}{ccc} 0 &amp; 0 &amp; 0 \\ 0 &amp; 0 &amp; 0 \\ 0 &amp; 0 &amp; 0\end{array}\right)\]</span></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">GAMMA_<span class="dv">3</span> &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>),
-                <span class="dt">nrow =</span> L_<span class="dv">3</span>, <span class="dt">ncol =</span> L_<span class="dv">3</span>)</code></pre></div>
-<p>The <span class="math inline">\(\rho\)</span> matrix is <span class="math display">\[\left(\begin{array}{cc} 0.75 &amp; 0.1 &amp; 0.1 \\ 0.1 &amp; 0.25 &amp; 0.1 \\ 0.1 &amp;0.1 &amp; 0.8\end{array}\right)\]</span></p>
+                  <span class="dt">nrow =</span> L_<span class="dv">3</span>, <span class="dt">ncol =</span> L_<span class="dv">3</span>)</code></pre></div>
+<p>The <span class="math inline">\(\rho\)</span> matrix is <span class="math display">\[\left(\begin{array}{ccc} 0.75 &amp; 0.1 &amp; 0.1 \\ 0.1 &amp; 0.25 &amp; 0.1 \\ 0.1 &amp;0.1 &amp; 0.8\end{array}\right)\]</span></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">RHO_<span class="dv">3</span> &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="fl">0.5</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.35</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.4</span>),
                 <span class="dt">nrow =</span> L_<span class="dv">3</span>, <span class="dt">ncol =</span> L_<span class="dv">3</span>)</code></pre></div>
 <p><strong>Simulation of a “N” distribution</strong></p>
@@ -567,9 +570,9 @@ mapMAP<span class="op">@</span>data[, <span class="kw">c</span>(<span class="st"
 ## [2,]   0.7385622  7.5057496  -2.551571
 ## [3,] -14.1138391 -2.5515712  31.514558</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">(res_multi_N_gen_3D &lt;-<span class="st"> </span><span class="kw">estimate_spatial_multi_gen_N</span>(<span class="dt">Y =</span> y_N_3d, <span class="dt">X =</span> x_simu, 
-   <span class="dt">W =</span> W_simu, <span class="dt">ind_beta =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(T, F, T, T, T, T, T, F, T, F, T, T), <span class="dv">4</span>, <span class="dv">3</span>),
-   <span class="dt">ind_RHO =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(T, T, T, T, T, F, F, T, T), <span class="dv">3</span>, <span class="dv">3</span>),
-   <span class="dt">ind_GAMMA =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(F, T, T, T, F, F, F, T, F), <span class="dv">3</span>, <span class="dv">3</span>)))</code></pre></div>
+  <span class="dt">W =</span> W_simu, <span class="dt">ind_beta =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(T, F, T, T, T, T, T, F, T, F, T, T), <span class="dv">4</span>, <span class="dv">3</span>),
+  <span class="dt">ind_RHO =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(T, T, T, T, T, F, F, T, T), <span class="dv">3</span>, <span class="dv">3</span>),
+  <span class="dt">ind_GAMMA =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(F, T, T, T, F, F, F, T, F), <span class="dv">3</span>, <span class="dv">3</span>)))</code></pre></div>
 <pre><code>## $res_beta
 ##            [,1]       [,2]      [,3]
 ## [1,]  8.8776703 -2.1090810 -6.373815
@@ -617,7 +620,7 @@ mapMAP<span class="op">@</span>data[, <span class="kw">c</span>(<span class="st"
 <p>Then, we look the spatial distribution of the residuals. For this, we first compute a spatial weight matrix based on the 4-nearest neighbours.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">coords_fr &lt;-<span class="st"> </span><span class="kw">coordinates</span>(dep.<span class="fl">2015.</span>spdf)
 W_listw &lt;-<span class="st"> </span><span class="kw">nb2listw</span>(<span class="kw">knn2nb</span>(<span class="kw">knearneigh</span>(coords_fr, <span class="dv">4</span>)), 
- <span class="dt">style =</span> <span class="st">&quot;W&quot;</span>)
+                    <span class="dt">style =</span> <span class="st">&quot;W&quot;</span>)
 W_dep &lt;-<span class="st"> </span><span class="kw">listw2mat</span>(W_listw)</code></pre></div>
 <p>We test the spatial autocorrelation in the residuals component by component:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">moran.mc</span>(<span class="kw">residuals</span>(res_N)[, <span class="dv">1</span>], <span class="dt">listw =</span> W_listw, <span class="dt">nsim =</span> <span class="dv">1000</span>)</code></pre></div>
