@@ -1,9 +1,9 @@
 ---
-title: 'Spatial CODA'
+title: "Spatial CODA"
 author: "Supplemental material"
 date: "Thi Huong An Nguyen, Anne Ruiz-Gazen, Christine Thomas-Agnan, Thibault Laurent"
 output:
-  html_document:
+  pdf_document:
     highlight: tango
     number_sections: yes
     toc: yes
@@ -132,131 +132,203 @@ We plan to simulate a multivariate $Y$ of size $L=2$ :
 L_simu <- 2
 ```
 
+```{r, eval = F}
+L_simu <- 1
+```
+
 We simulate the explanatory variables:
   
 ```{r}
 set.seed(1234)
 x1 <- rnorm(n, 15, 3)
-x2 <- rbinom(n, 100, 0.45)/100
+x2 <- rbinom(n, 100, 0.45)
 x3 <- log(round(runif(n, 1, n),0))
 x_simu <- cbind(rep(1, n), x1, x2, x3)
 p_simu <- ncol(x_simu)
 ```
 
 
-The $\beta$ matrix is $$\left(\begin{array}{cc} 5 & 2\\ 1/4 & -1 \\ 6 & -3\\ 1 & 3\end{array}\right),$$ 
+We fiw some parameters of simulations: 
+
+$$\beta = \left(\begin{array}{cc} 15 & 20\\ 2 & -3 \\ 1 & 2\\ -1 & 3\end{array}\right), \Sigma = \left(\begin{array}{cc} 2 & 0\\ 0 & 3\end{array}\right)$$ 
   
 ```{r}
-beta_true <- matrix(c(5, 2, 0.25, -1, 6, -3, 1, 3), byrow = T,
+beta_true <- matrix(c(15, 2, 1, -1, 20, -3, -2, 3), byrow = F,
                     nrow = p_simu, ncol = L_simu)
 ```
 
-the $\Sigma$ matrix is  $$\left(\begin{array}{cc} 10 & 8\\ 8 & 10\end{array}\right),$$ 
-  
 ```{r}
-Sigma <- matrix(c(10, 9, 9, 10),
+Sigma <- matrix(c(2, 0, 0, 3),
                 nrow = L_simu, ncol = L_simu)
 ```
 
-the $\Gamma$ matrix is $$\left(\begin{array}{cc} 0 & 0\\ 0 & 0\end{array}\right),$$ 
+Now, we vary some parameters. 
+
+### Model simulation 1 
+
+*  $$R = \left(\begin{array}{cc} 0.5 & 0\\ 0 & 0.3\end{array}\right), \Gamma = \left(\begin{array}{cc} 0 & 0\\ 0 & 0\end{array}\right)$$ 
   
 ```{r}
+RHO <- matrix(c(0.5, 0, 0, 0.3),
+              nrow = L_simu, ncol = L_simu)
 GAMMA <- matrix(c(0, 0, 0, 0),
                 nrow = L_simu, ncol = L_simu)
 ```
-
-and the $R$ matrix is $$\left(\begin{array}{cc} 0.75 & 0.1\\ 0.3 & 0.15\end{array}\right).$$ 
-  
-```{r}
-RHO <- matrix(c(0.5, 0.1, 0.2, 0.4),
-              nrow = L_simu, ncol = L_simu)
-```
-
 
 We simulate the process:
   
 ```{r}
 set.seed(1)
-y_N <- simu_spatial_multi_y(X = x_simu, beta_true = beta_true, method_simulate = "N",
-                            Sigma = Sigma, GAMMA = GAMMA, RHO = RHO, W = W_simu) 
-mapMAP@data[, c("y_1", "y_2")] <- y_N
+y_N_mod_1 <- simu_spatial_multi_y(X = x_simu, beta_true = beta_true, 
+                            method_simulate = "N",
+                            Sigma = Sigma, 
+                            GAMMA = GAMMA, 
+                            RHO = RHO, 
+                            W = W_simu) 
+mapMAP@data[, c("y_N_mod_1_1", "y_N_mod_1_2")] <- y_N_mod_1
+```
+
+### Model simulation 2 
+
+* $$R = \left(\begin{array}{cc} 0.5 & 0.2\\ 0.15 & 0.3\end{array}\right), \Gamma = \left(\begin{array}{cc} 0 & 0\\ 0 & 0\end{array}\right)$$ 
+  
+```{r}
+RHO <- matrix(c(0.5, 0.2, 0.15, 0.3),
+              nrow = L_simu, ncol = L_simu)
+GAMMA <- matrix(c(0, 0, 0, 0),
+                nrow = L_simu, ncol = L_simu)
+```
+
+We simulate the process:
+  
+```{r}
+set.seed(1)
+y_N_mod_2 <- simu_spatial_multi_y(X = x_simu, beta_true = beta_true, 
+                            method_simulate = "N",
+                            Sigma = Sigma, 
+                            GAMMA = GAMMA, 
+                            RHO = RHO, 
+                            W = W_simu) 
+mapMAP@data[, c("y_N_mod_2_1", "y_N_mod_2_2")] <- y_N_mod_2
+```
+
+### Model simulation 3
+
+*  $$R = \left(\begin{array}{cc} 0.5 & 0.2\\ 0.15 & 0.3\end{array}\right), \Gamma = \left(\begin{array}{cc} 0 & 0.1\\ 0.2 & 0\end{array}\right)$$ 
+  
+```{r}
+RHO <- matrix(c(0.5, 0.2, 0.15, 0.3),
+              nrow = L_simu, ncol = L_simu)
+GAMMA <- matrix(c(0, 0.2, 0.4, 0),
+                nrow = L_simu, ncol = L_simu)
+```
+
+We simulate the process:
+  
+```{r}
+set.seed(1)
+y_N_mod_3 <- simu_spatial_multi_y(X = x_simu, beta_true = beta_true, 
+                            method_simulate = "N",
+                            Sigma = Sigma, 
+                            GAMMA = GAMMA, 
+                            RHO = RHO, 
+                            W = W_simu) 
+mapMAP@data[, c("y_N_mod_3_1", "y_N_mod_3_2")] <- y_N_mod_3
 ```
 
 We plot the two component of $Y$ on the map: 
-```{r, fig.width = 12, fig.height = 6}
+```{r, fig.width = 12, fig.height = 12}
 library("cartography")
-op <- par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(0, 0, 1, 0))
-choroLayer(spdf = mapMAP, var = "y_1", legend.pos = "topleft", 
+op <- par(mfrow = c(3, 2), oma = c(0, 0, 0, 0), mar = c(0, 0, 1, 0))
+choroLayer(spdf = mapMAP, var = "y_N_mod_1_1", legend.pos = "topleft", 
            method = "quantile")
-choroLayer(spdf = mapMAP, var = "y_2", legend.pos = "topleft", 
+choroLayer(spdf = mapMAP, var = "y_N_mod_1_2", legend.pos = "topleft", 
+           method = "quantile")
+choroLayer(spdf = mapMAP, var = "y_N_mod_2_1", legend.pos = "topleft", 
+           method = "quantile")
+choroLayer(spdf = mapMAP, var = "y_N_mod_2_2", legend.pos = "topleft", 
+           method = "quantile")
+choroLayer(spdf = mapMAP, var = "y_N_mod_3_1", legend.pos = "topleft", 
+           method = "quantile")
+choroLayer(spdf = mapMAP, var = "y_N_mod_3_2", legend.pos = "topleft", 
            method = "quantile")
 par(op)
 ```
 
 We also plot the joint distribution:
 ```{r}
-y_N_df <- data.frame(y_1 = y_N[, 1], y_2 = y_N[, 2])
-sp <- ggplot(y_N_df, aes(x = y_1, y = y_2)) +
-  geom_point()
-sp + geom_density_2d()
+y_N_df <- data.frame(y_N_mod_11 = y_N_mod_1[, 1], 
+                     y_N_mod_12 = y_N_mod_1[, 2], 
+                     y_N_mod_21 = y_N_mod_2[, 1], 
+                     y_N_mod_22 = y_N_mod_2[, 2], 
+                     y_N_mod_31 = y_N_mod_3[, 1], 
+                     y_N_mod_32 = y_N_mod_3[, 2], 
+                     x_simu)
+plot1 <- ggplot(y_N_df, aes(x = y_N_mod_11, y = y_N_mod_12)) +
+  geom_point() + geom_density_2d()
+plot2 <- ggplot(y_N_df, aes(x = y_N_mod_21, y = y_N_mod_22)) +
+  geom_point() + geom_density_2d()
+plot3 <- ggplot(y_N_df, aes(x = y_N_mod_31, y = y_N_mod_32)) +
+  geom_point() + geom_density_2d()
+gridExtra::grid.arrange(plot1, plot2, plot3, nrow = 1, ncol = 3)
 ```
 
-#### Example when $L = 3$ ####
+<!-- #### Example when $L = 3$ #### -->
 
-We simulate another multivariate sample when $L = 3$.
+<!-- We simulate another multivariate sample when $L = 3$. -->
 
-```{r}
-L_3 <- 3
-```
+<!-- ```{r} -->
+<!-- L_3 <- 3 -->
+<!-- ``` -->
 
-We keep the same explanatatory variable $X$. However, the $\beta$ matrix is now equal to : $$\left(\begin{array}{ccc} 5 & 2 & 10\\ 1/4 & -1 & 4\\ 6 & -3 & -5 \\ 1 & 3 & 5\end{array}\right)$$ 
-  
-and the $\Sigma$ matrix is $$\left(\begin{array}{ccc} 12 & 10 & 10\\ 10 & 15 & 10 \\ 10 & 10 & 20\end{array}\right)$$ 
-  
-  
-```{r}
-beta_true_3 <- matrix(c(5, 2, 10, 0, -1, 0, 6, -3, -5, 1, 0, 5), byrow = T,
-                      nrow = p_simu, ncol = L_3)
-Sigma_3 <- matrix(10, nrow = L_3, ncol = L_3)
-diag(Sigma_3) <- c(12, 15, 20)
-```
+<!-- We keep the same explanatatory variable $X$. However, the $\beta$ matrix is now equal to : $$\left(\begin{array}{ccc} 5 & 2 & 10\\ 1/4 & -1 & 4\\ 6 & -3 & -5 \\ 1 & 3 & 5\end{array}\right)$$  -->
 
-The $\Gamma$ matrix is $$\left(\begin{array}{ccc} 0 & 0 & 0 \\ 0 & 0 & 0 \\ 0 & 0 & 0\end{array}\right)$$ 
-  
-```{r}
-GAMMA_3 <- matrix(c(0, 0, 0, 0, 0, 0, 0, 0, 0),
-                  nrow = L_3, ncol = L_3)
-```
-
-The $\rho$ matrix is $$\left(\begin{array}{ccc} 0.75 & 0.1 & 0.1 \\ 0.1 & 0.25 & 0.1 \\ 0.1 &0.1 & 0.8\end{array}\right)$$ 
-  
-```{r}
-RHO_3 <- matrix(c(0.5, 0.1, 0.1, 0.1, 0.35, 0.1, 0.1, 0.1, 0.4),
-                nrow = L_3, ncol = L_3)
-```
+<!-- and the $\Sigma$ matrix is $$\left(\begin{array}{ccc} 12 & 10 & 10\\ 10 & 15 & 10 \\ 10 & 10 & 20\end{array}\right)$$  -->
 
 
-**Simulation of a "N" distribution**
-  
-```{r}
-y_N_3d <- simu_spatial_multi_y(X = x_simu, beta_true = beta_true_3, 
-                               method_simulate = "N", Sigma = Sigma_3, 
-                               GAMMA = GAMMA_3, RHO = RHO_3, W = W_simu) 
-mapMAP@data[, c("y_1_3d", "y_2_3d", "y_3_3d")] <- y_N_3d
-```
+<!-- ```{r} -->
+<!-- beta_true_3 <- matrix(c(5, 2, 10, 0, -1, 0, 6, -3, -5, 1, 0, 5), byrow = T, -->
+<!--                       nrow = p_simu, ncol = L_3) -->
+<!-- Sigma_3 <- matrix(10, nrow = L_3, ncol = L_3) -->
+<!-- diag(Sigma_3) <- c(12, 15, 20) -->
+<!-- ``` -->
 
-We plot the three component of $Y$ on the map: 
-  
-```{r, fig.width = 12, fig.height = 6}
-op <- par(mfrow = c(1, 3), oma = c(0, 0, 0, 0), mar = c(0, 0, 1, 0))
-choroLayer(spdf = mapMAP, var = "y_1_3d", legend.pos = "topleft", 
-           method = "quantile")
-choroLayer(spdf = mapMAP, var = "y_2_3d", legend.pos = "topleft", 
-           method = "quantile")
-choroLayer(spdf = mapMAP, var = "y_3_3d", legend.pos = "topleft", 
-           method = "quantile")
-par(op)
-```
+<!-- The $\Gamma$ matrix is $$\left(\begin{array}{ccc} 0 & 0 & 0 \\ 0 & 0 & 0 \\ 0 & 0 & 0\end{array}\right)$$  -->
+
+<!-- ```{r} -->
+<!-- GAMMA_3 <- matrix(c(0, 0, 0, 0, 0, 0, 0, 0, 0), -->
+<!--                   nrow = L_3, ncol = L_3) -->
+<!-- ``` -->
+
+<!-- The $\rho$ matrix is $$\left(\begin{array}{ccc} 0.75 & 0.1 & 0.1 \\ 0.1 & 0.25 & 0.1 \\ 0.1 &0.1 & 0.8\end{array}\right)$$  -->
+
+<!-- ```{r} -->
+<!-- RHO_3 <- matrix(c(0.5, 0.1, 0.1, 0.1, 0.35, 0.1, 0.1, 0.1, 0.4), -->
+<!--                 nrow = L_3, ncol = L_3) -->
+<!-- ``` -->
+
+
+<!-- **Simulation of a "N" distribution** -->
+
+<!-- ```{r} -->
+<!-- y_N_3d <- simu_spatial_multi_y(X = x_simu, beta_true = beta_true_3,  -->
+<!--                                method_simulate = "N", Sigma = Sigma_3,  -->
+<!--                                GAMMA = GAMMA_3, RHO = RHO_3, W = W_simu)  -->
+<!-- mapMAP@data[, c("y_1_3d", "y_2_3d", "y_3_3d")] <- y_N_3d -->
+<!-- ``` --
+
+<!-- We plot the three component of $Y$ on the map:  -->
+
+<!-- ```{r, fig.width = 12, fig.height = 6} -->
+<!-- op <- par(mfrow = c(1, 3), oma = c(0, 0, 0, 0), mar = c(0, 0, 1, 0)) -->
+<!-- choroLayer(spdf = mapMAP, var = "y_1_3d", legend.pos = "topleft",  -->
+<!--            method = "quantile") -->
+<!-- choroLayer(spdf = mapMAP, var = "y_2_3d", legend.pos = "topleft",  -->
+<!--            method = "quantile") -->
+<!-- choroLayer(spdf = mapMAP, var = "y_3_3d", legend.pos = "topleft",  -->
+<!--            method = "quantile") -->
+<!-- par(op) -->
+<!-- ``` -->
 
 
 # Estimation #
@@ -294,37 +366,78 @@ source("./R/estimate_spatial_multi_gen_N.R")
 
 ### Examples: ###
 
-**Simulated data when $L = 2$** 
-```{r}
-(res_multi_N <- estimate_spatial_multi_N(Y = y_N, X = x_simu, W = W_simu))
-```
+### Model simulation 1 
 
-```{r}
-(res_multi_N <- estimate_spatial_multi_N(Y = y_N, X = x_simu, W = W_simu, 
-                                         GAMMA_esti = T))
-```
-
-**Simulated data when $L = 2$** 
+*  $$\beta = \left(\begin{array}{cc} 15 & 20\\ 2 & -3 \\ 1 & 2\\ -1 & 3\end{array}\right), \Sigma = \left(\begin{array}{cc} 2 & 0\\ 0 & 3\end{array}\right), R = \left(\begin{array}{cc} 0.5 & 0\\ 0 & 0.3\end{array}\right), \Gamma = \left(\begin{array}{cc} 0 & 0\\ 0 & 0\end{array}\right)$$ 
   
 ```{r}
-(res_multi_N_3D <- estimate_spatial_multi_N(Y = y_N_3d, X = x_simu, 
-                                            W = W_simu))
+(res_multi_N <- estimate_spatial_multi_gen_N(Y = y_N_mod_1, X = x_simu, 
+  W = W_simu, 
+  ind_beta = matrix(c(T, T, T, T, T, T, T, T, T, T, T, T), 4, 3),
+  ind_RHO = matrix(c(T, F, F, T), 2, 2),
+  ind_GAMMA = matrix(c(F, F, F, F), 2, 2)))
 ```
+
+Which is equivalent to : 
+
 
 ```{r}
-(res_multi_N_3D <- estimate_spatial_multi_N(Y = y_N_3d, X = x_simu, W = W_simu, 
-                                            GAMMA_esti = T))
+(s2sls_lm_1 <- stsls(y_N_mod_11 ~ x1 + x2 + x3, data = y_N_df, listw = W1.listw))
+(s2sls_lm_2 <- stsls(y_N_mod_12 ~ x1 + x2 + x3, data = y_N_df, listw = W1.listw))
 ```
 
+
+### Model simulation 2
+
+* $$\beta = \left(\begin{array}{cc} 15 & 20\\ 2 & -3 \\ 1 & 2\\ -1 & 3\end{array}\right), \Sigma = \left(\begin{array}{cc} 2 & 0\\ 0 & 3\end{array}\right), R = \left(\begin{array}{cc} 0.5 & 0.2\\ 0.15 & 0.3\end{array}\right), \Gamma = \left(\begin{array}{cc} 0 & 0\\ 0 & 0\end{array}\right)$$ 
 
 ```{r}
-(res_multi_N_gen_3D <- estimate_spatial_multi_gen_N(Y = y_N_3d, X = x_simu, 
-  W = W_simu, ind_beta = matrix(c(T, F, T, T, T, T, T, F, T, F, T, T), 4, 3),
-  ind_RHO = matrix(c(T, T, T, T, T, F, F, T, T), 3, 3),
-  ind_GAMMA = matrix(c(F, T, T, T, F, F, F, T, F), 3, 3)))
+(res_multi_N <- estimate_spatial_multi_gen_N(Y = y_N_mod_2, X = x_simu, 
+  W = W_simu, 
+  ind_beta = matrix(c(T, T, T, T, T, T, T, T, T, T, T, T), 4, 3),
+  ind_RHO = matrix(c(T, T, T, T), 2, 2),
+  ind_GAMMA = matrix(c(F, F, F, F), 2, 2)))
 ```
 
-## Application to the real data
+
+
+### Model simulation 3
+
+*  $$\beta = \left(\begin{array}{cc} 15 & 20\\ 2 & -3 \\ 1 & 2\\ -1 & 3\end{array}\right), \Sigma = \left(\begin{array}{cc} 2 & 0\\ 0 & 3\end{array}\right), R = \left(\begin{array}{cc} 0.5 & 0.2\\ 0.15 & 0.3\end{array}\right), \Gamma = \left(\begin{array}{cc} 0 & 0.1\\ 0.2 & 0\end{array}\right)$$ 
+
+```{r}
+(res_multi_N <- estimate_spatial_multi_gen_N(Y = y_N_mod_3, X = x_simu, 
+  W = W_simu, 
+  ind_beta = matrix(c(T, T, T, T, T, T, T, T, T, T, T, T), 4, 3),
+  ind_RHO = matrix(c(T, T, T, T), 2, 2),
+  ind_GAMMA = matrix(c(F, T, T, F), 2, 2)))
+```
+
+
+
+<!-- **Simulated data when $L = 2$**  -->
+
+<!-- ```{r} -->
+<!-- (res_multi_N_3D <- estimate_spatial_multi_N(Y = y_N_3d, X = x_simu,  -->
+<!--                                             W = W_simu)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- (res_multi_N_3D <- estimate_spatial_multi_N(Y = y_N_3d, X = x_simu, W = W_simu,  -->
+<!--                                             GAMMA_esti = T)) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- (res_multi_N_gen_3D <- estimate_spatial_multi_gen_N(Y = y_N_3d, X = x_simu,  -->
+<!--   W = W_simu,  -->
+<!--   ind_beta = matrix(c(T, F, T, T, T, T, T, F, T, F, T, T), 4, 3), -->
+<!--   ind_RHO = matrix(c(T, T, T, T, T, F, F, T, T), 3, 3), -->
+<!--   ind_GAMMA = matrix(c(F, T, T, T, F, F, F, T, F), 3, 3))) -->
+<!-- ``` -->
+
+
+# Application to the real data
 
 We first load the data:
 ```{r}
@@ -347,7 +460,7 @@ Xe <- as(cbind(1, x2_df[, c("age3_ilr1", "age3_ilr2",
          "matrix")
 ```
 
-### Multivariate Gaussian model
+## Multivariate Gaussian model
 
 We estimate first a multivariate gaussian model by using the *lm()* function.
 
@@ -385,6 +498,8 @@ choroLayer(spdf = dep.2015.spdf, var = "res_y_2", legend.pos = "topleft",
            method = "quantile", legend.values.rnd = 2)
 par(op)
 ```
+
+## Multivariate Gaussian SAR model
 
 We estimate a multivariate gaussian SAR model by using the *lm()* function.
 
